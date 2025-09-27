@@ -20,41 +20,67 @@ class Skeleton:
         return np.stack([j.pos for j in self.joints], axis=0)  # (J,3)
 
     def global_from_local(self, local_T):
-        """FK：局部变换按父子层级传播为全局矩阵。"""
+        """FK：局部变换按父子层级传播为全局矩阵。
+        修复版本：正确计算全局位置。
+        """
         J = self.n
         parents = self.parents()
+        bind_pos = self.bind_positions()  # 绑定姿态的关节位置
+        
+        # 初始化全局变换矩阵
         global_T = np.zeros((J,4,4), dtype=np.float32)
+        
         for i in range(J):
             p = parents[i]
+            
             if p < 0:
-                global_T[i] = local_T[i]
+                # 根节点：从绑定位置开始，应用局部变换
+                bind_matrix = np.eye(4, dtype=np.float32)
+                bind_matrix[:3, 3] = bind_pos[i]  # 绑定位置
+                global_T[i] = bind_matrix @ local_T[i]
             else:
-                global_T[i] = global_T[p] @ local_T[i]
+                # 子节点：从父节点变换后的位置开始
+                # 1. 先计算相对于父节点的偏移
+                relative_pos = bind_pos[i] - bind_pos[p]
+                offset_matrix = np.eye(4, dtype=np.float32)
+                offset_matrix[:3, 3] = relative_pos
+                
+                # 2. 应用父节点的全局变换，然后是偏移，最后是局部变换
+                global_T[i] = global_T[p] @ offset_matrix @ local_T[i]
+        
         return global_T
 
 def quadruped_auto_place(bbox_min, bbox_max):
-    """四足模板的自动放置（基于包围盒比例），后续可手动微调。"""
+    """四足模板的自动放置（基于包围盒比例），Y轴向上的坐标系"""
     c = (bbox_min + bbox_max) * 0.5
     L = bbox_max - bbox_min
     x0, y0, z0 = c
-    hips  = np.array([x0 - 0.25*L[0], y0 + 0.45*L[1], z0])
-    chest = np.array([x0 + 0.15*L[0], y0 + 0.5 *L[1], z0])
-    neck  = np.array([x0 + 0.35*L[0], y0 + 0.6 *L[1], z0])
-    head  = np.array([x0 + 0.5 *L[0], y0 + 0.7 *L[1], z0])
-    root  = np.array([x0 - 0.35*L[0], y0 + 0.4 *L[1], z0])
+    
+    # Y轴向上的坐标系：X前后，Y上下，Z左右
+    hips  = np.array([x0 - 0.25*L[0], y0 - 0.05*L[1], z0])  # 髋部稍微下降
+    chest = np.array([x0 + 0.15*L[0], y0 + 0.0 *L[1], z0])  # 胸部在中间高度
+    neck  = np.array([x0 + 0.35*L[0], y0 + 0.1 *L[1], z0])  # 颈部稍微上升
+    head  = np.array([x0 + 0.5 *L[0], y0 + 0.2 *L[1], z0])  # 头部更高
+    root  = np.array([x0 - 0.35*L[0], y0 - 0.1 *L[1], z0])  # 根部稍微下降
+    
+    # Z轴分量用于左右腿的分离
     zoff = 0.25*L[2]
+    
+    # 前肩和前腿 - Y坐标向下延伸
     shoulder_L = chest + np.array([0.0, 0.0, +zoff])
     shoulder_R = chest + np.array([0.0, 0.0, -zoff])
-    elbow_L    = shoulder_L + np.array([0.0, -0.25*L[1], 0.0])
-    elbow_R    = shoulder_R + np.array([0.0, -0.25*L[1], 0.0])
-    wrist_L    = elbow_L    + np.array([0.0, -0.25*L[1], 0.0])
-    wrist_R    = elbow_R    + np.array([0.0, -0.25*L[1], 0.0])
+    elbow_L    = shoulder_L + np.array([0.0, -0.25*L[1], 0.0])  # Y向下
+    elbow_R    = shoulder_R + np.array([0.0, -0.25*L[1], 0.0])  # Y向下
+    wrist_L    = elbow_L    + np.array([0.0, -0.25*L[1], 0.0])  # Y向下
+    wrist_R    = elbow_R    + np.array([0.0, -0.25*L[1], 0.0])  # Y向下
+    
+    # 后臀和后腿 - Y坐标向下延伸
     hip_L  = hips + np.array([0.0, 0.0, +zoff])
     hip_R  = hips + np.array([0.0, 0.0, -zoff])
-    knee_L = hip_L + np.array([0.0, -0.3*L[1], 0.0])
-    knee_R = hip_R + np.array([0.0, -0.3*L[1], 0.0])
-    ankle_L= knee_L + np.array([0.0, -0.25*L[1], 0.0])
-    ankle_R= knee_R + np.array([0.0, -0.25*L[1], 0.0])
+    knee_L = hip_L + np.array([0.0, -0.3*L[1], 0.0])   # Y向下
+    knee_R = hip_R + np.array([0.0, -0.3*L[1], 0.0])   # Y向下
+    ankle_L= knee_L + np.array([0.0, -0.25*L[1], 0.0]) # Y向下
+    ankle_R= knee_R + np.array([0.0, -0.25*L[1], 0.0]) # Y向下
 
     P = [
         ("root",   -1, root),
