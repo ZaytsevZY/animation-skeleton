@@ -9,9 +9,14 @@ class Joint:
     pos: np.ndarray  # (3,) 绑定位姿下的关节位置
 
 class Skeleton:
-    def __init__(self, joints):
-        self.joints = joints  # list[Joint]
-        self.n = len(joints)
+    def __init__(self, joints=None):
+        self.joints = joints if joints is not None else []
+        self.n = len(self.joints)
+
+    def add_joint(self, joint):
+        """添加关节到骨架"""
+        self.joints.append(joint)
+        self.n = len(self.joints)
 
     def parents(self):
         return np.array([j.parent for j in self.joints], dtype=np.int32)
