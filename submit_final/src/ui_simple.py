@@ -1,5 +1,5 @@
 """
-优化版骨架绑定 UI - 带工具栏
+骨架绑定 UI - 带工具栏
 功能：
 - 左侧工具栏：重置按钮、蒙皮模式切换
 - 性能优化：Actor缓存、延迟更新
@@ -538,13 +538,16 @@ class OptimizedDragUI(QMainWindow):
         
         # 蒙皮模式：'full' 或 'simple'
         self.skinning_mode = 'full'
-        
+
+        # 导出状态
+        self.is_exporting = False
+
         self.init_ui()
         self.load_model()
     
     def init_ui(self):
         """初始化UI"""
-        self.setWindowTitle("骨架绑定工具 - 优化版")
+        self.setWindowTitle("骨架绑定工具")
         self.setGeometry(100, 100, 1400, 800)
         
         # 创建中央widget
@@ -724,9 +727,40 @@ class OptimizedDragUI(QMainWindow):
         export_group.setLayout(export_layout)
         layout.addWidget(export_group)
         
+        # ===== 介绍和使用方法 =====
+        help_group = QGroupBox("介绍和使用方法")
+        help_layout = QVBoxLayout()
+
+        help_text = QLabel(
+            "【骨架绑定工具】\n"
+            "• 基于线性混合蒙皮(LBS)算法\n"
+            "• 支持实时交互式关节调整\n"
+            "• 支持完整蒙皮和简化蒙皮模式\n\n"
+
+            "【使用方法】\n"
+            "1. 点击红色球体选择关节\n"
+            "2. 拖拽彩色箭头沿轴移动\n"
+            "3. 右键拖拽旋转视角\n"
+            "4. 滚轮缩放场景\n\n"
+
+            "【导出功能】\n"
+            "• 一键导出动画：生成摇头+奔跑动画\n"
+            "• 导出骨架信息：JSON格式骨架数据\n"
+            "• 权重导出：顶点-关节权重矩阵"
+        )
+        help_text.setStyleSheet(
+            "font-size: 11px; color: #333; line-height: 1.4; "
+            "background-color: #fff; padding: 8px; "
+            "border-radius: 3px; border: 1px solid #ddd;"
+        )
+        help_text.setWordWrap(True)
+        help_layout.addWidget(help_text)
+        help_group.setLayout(help_layout)
+        layout.addWidget(help_group)
+
         # ===== 占位符 =====
         layout.addStretch()
-        
+
         # 底部信息
         info_label = QLabel("版本 1.0")
         info_label.setStyleSheet("font-size: 10px; color: #999;")
@@ -1197,23 +1231,20 @@ class OptimizedDragUI(QMainWindow):
             QMessageBox.warning(self, "警告", "请先加载模型")
             return
 
-        # 创建进度对话框
-        self.progress_dialog = QProgressDialog("正在导出动画...", "取消", 0, 100, self)
-        self.progress_dialog.setWindowTitle("动画导出")
-        self.progress_dialog.setWindowModality(Qt.WindowModal)
-        self.progress_dialog.setAutoClose(True)
-
         # 创建导出线程
         self.exporter = AnimationExporter(self.mesh, self.skeleton, self.bones, self.weights)
-        self.exporter.progress_updated.connect(self.progress_dialog.setValue)
+        self.exporter.progress_updated.connect(self.update_status_progress)
         self.exporter.status_message.connect(self.statusBar().showMessage)
         self.exporter.finished_signal.connect(self.on_animation_export_finished)
 
         # 启动导出
         self.is_exporting = True
         self.export_animation_button.setEnabled(False)
-        self.progress_dialog.show()
         self.exporter.start()
+
+    def update_status_progress(self, value):
+        """更新状态栏进度"""
+        self.statusBar().showMessage(f"[导出中] 进度: {value}%")
 
     def on_animation_export_finished(self, success, message):
         """动画导出完成回调"""
@@ -1290,6 +1321,27 @@ class OptimizedDragUI(QMainWindow):
 
         except Exception as e:
             QMessageBox.critical(self, "错误", f"导出失败：{str(e)}")
+
+    def closeEvent(self, event):
+        """关闭事件处理"""
+        if hasattr(self, 'is_exporting') and self.is_exporting:
+            reply = QMessageBox.question(
+                self, '确认关闭',
+                '正在渲染视频，是否要关闭窗口？\n\n关闭窗口将中断正在进行的视频导出。',
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+
+            if reply == QMessageBox.Yes:
+                # 如果用户确认关闭，停止导出线程
+                if hasattr(self, 'exporter') and self.exporter.isRunning():
+                    self.exporter.terminate()
+                    self.exporter.wait()
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
 
 
 def main():
