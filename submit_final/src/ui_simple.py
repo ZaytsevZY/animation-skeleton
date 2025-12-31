@@ -423,7 +423,7 @@ class AnimationExporter(QThread):
                     )
 
                     # 渲染帧
-                    frame_path = os.path.join(output_dir, f"frame_{frame_idx+1:04d}.png")
+                    frame_path = os.path.join(output_dir, f"frame_{frame_idx:04d}.png")
                     self.render_frame_with_skeleton(
                         deformed_vertices, self.mesh.f, self.skeleton, G_current,
                         self.bones, frame_path, frame_idx+1
@@ -580,10 +580,10 @@ class OptimizedDragUI(QMainWindow):
         self.picker = vtk.vtkPropPicker()
         
         # 状态栏
-        self.statusBar().showMessage("💡 点击红色球体选择关节，拖拽箭头沿轴移动")
+        self.statusBar().showMessage("点击红色球体选择关节，拖拽箭头沿轴移动")
     
     def create_toolbar(self):
-        """✅ 创建左侧工具栏"""
+        """创建左侧工具栏"""
         toolbar = QWidget()
         toolbar.setFixedWidth(250)
         toolbar.setStyleSheet("""
@@ -664,7 +664,7 @@ class OptimizedDragUI(QMainWindow):
         control_layout = QVBoxLayout()
         
         # 重置按钮
-        self.reset_button = QPushButton("🔄 重置到初始状态")
+        self.reset_button = QPushButton("重置到初始状态")
         self.reset_button.setObjectName("resetButton")
         self.reset_button.clicked.connect(self.reset_to_initial)
         control_layout.addWidget(self.reset_button)
@@ -772,15 +772,15 @@ class OptimizedDragUI(QMainWindow):
     def reset_to_initial(self):
         """重置到初始状态"""
         if self.initial_joint_transforms is None:
-            self.statusBar().showMessage("⚠️ 没有可重置的初始状态")
+            self.statusBar().showMessage("没有可重置的初始状态")
             return
         
         self.joint_transforms = self.initial_joint_transforms.copy()
         self.selected_joint = None
         self.update_deformed_mesh_only()
         
-        self.statusBar().showMessage("✅ 已重置到初始状态")
-        print("🔄 重置到初始状态")
+        self.statusBar().showMessage("已重置到初始状态")
+        print("重置到初始状态")
     
     def on_skinning_mode_changed(self, index):
         """蒙皮模式切换"""
@@ -788,8 +788,8 @@ class OptimizedDragUI(QMainWindow):
         self.update_deformed_mesh_only()
         
         mode_name = self.skinning_combo.currentText()
-        self.statusBar().showMessage(f"✅ 切换到：{mode_name}")
-        print(f"🎨 蒙皮模式切换为：{self.skinning_mode}")
+        self.statusBar().showMessage(f"切换到：{mode_name}")
+        print(f"蒙皮模式切换为：{self.skinning_mode}")
     
     def eventFilter(self, obj, event):
         """事件过滤器"""
@@ -829,7 +829,7 @@ class OptimizedDragUI(QMainWindow):
                     self.dragging_axis = (axis_name, axis_vector)
                     self.last_mouse_pos = (mouse_x, mouse_y)
                     self.plotter.disable()
-                    print(f"🎯 开始拖拽 {axis_name.upper()} 轴")
+                    print(f"开始拖拽 {axis_name.upper()} 轴")
                     return
                 
                 for sphere_actor, joint_idx in self.joint_sphere_actors.items():
@@ -838,26 +838,26 @@ class OptimizedDragUI(QMainWindow):
                             self.is_dragging = True
                             self.last_mouse_pos = (mouse_x, mouse_y)
                             self.plotter.disable()
-                            print(f"🖱️ 开始拖拽关节 [{joint_idx}]")
+                            print(f"开始拖拽关节 [{joint_idx}]")
                         else:
                             self.selected_joint = joint_idx
                             self.update_gizmo_only()
                             joint_name = self.skeleton.joints[joint_idx].name
                             self.statusBar().showMessage(
-                                f"✅ 选中关节 [{joint_idx}] {joint_name}"
+                                f"选中关节 [{joint_idx}] {joint_name}"
                             )
-                            print(f"✅ 选中关节 [{joint_idx}] {joint_name}")
+                            print(f"选中关节 [{joint_idx}] {joint_name}")
                         return
                 
                 if self.selected_joint is not None:
                     self.selected_joint = None
                     self.update_gizmo_only()
-                    self.statusBar().showMessage("💡 点击红色球体选择关节")
+                    self.statusBar().showMessage("点击红色球体选择关节")
             else:
                 if self.selected_joint is not None:
                     self.selected_joint = None
                     self.update_gizmo_only()
-                    self.statusBar().showMessage("💡 点击红色球体选择关节")
+                    self.statusBar().showMessage("点击红色球体选择关节")
     
     def handle_mouse_move(self, event):
         """处理鼠标移动"""
@@ -959,11 +959,11 @@ class OptimizedDragUI(QMainWindow):
             joint_positions = self.skeleton.bind_positions()
             
             # 计算完整权重
-            print("🔄 计算完整权重...")
+            print("计算完整权重...")
             self.weights = idw_two_bones(self.mesh.v, joint_positions, self.bones)
             
             # 计算简化权重
-            print("🔄 计算简化权重...")
+            print("计算简化权重...")
             self.simple_weights = self.compute_simple_weights(self.mesh.v, joint_positions)
             
             bind_local = np.eye(4, dtype=np.float32)[None, :, :].repeat(self.skeleton.n, axis=0)
@@ -976,7 +976,7 @@ class OptimizedDragUI(QMainWindow):
             self.render_scene_full()
             
             self.statusBar().showMessage(
-                f"✅ 加载成功：{self.skeleton.n} 个关节"
+                f"加载成功：{self.skeleton.n} 个关节"
             )
             
         except Exception as e:
@@ -999,7 +999,7 @@ class OptimizedDragUI(QMainWindow):
         weights = np.zeros((n_verts, n_joints), dtype=np.float32)
         weights[np.arange(n_verts), nearest_joint] = 1.0
         
-        print(f"✅ 简化权重计算完成")
+        print(f"简化权重计算完成")
         return weights
     
     def get_joint_children(self, joint_idx):

@@ -92,7 +92,7 @@ def load_skeleton_from_glb(glb_path, scale=1.0, verbose=True):
             bones.append((skeleton.joints[i].parent, i))
 
     if verbose:
-        print(f"   ✅ 加载完成: {skeleton.n} 关节, {len(bones)} 骨骼")
+        print(f"   加载完成: {skeleton.n} 关节, {len(bones)} 骨骼")
 
     return skeleton, bones
 

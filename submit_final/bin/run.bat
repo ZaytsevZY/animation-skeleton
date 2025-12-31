@@ -27,7 +27,7 @@ if errorlevel 1 (
 )
 
 REM 运行主程序
-echo [INFO] 正在启动程序...
+echo Starting program...
 cd ../src
 python main.py
 cd ../bin
