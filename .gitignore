@@ -1,0 +1,24 @@
+# 忽略文件类型
+*.mp4
+*.gif
+*.png
+*.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS 临时文件
+.DS_Store
+Thumbs.db
+
+# Claude 临时文件
+.claude/
+
+# 其他常见忽略
+*.log
+*.tmp
+*.swp
+*.bak
