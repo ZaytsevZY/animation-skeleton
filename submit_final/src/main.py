@@ -73,7 +73,7 @@ def check_dependencies():
 
 def main():
     """主函数 - 启动骨架绑定系统"""
-    print("🚀 启动骨架绑定系统...")
+    print("[INFO] 启动骨架绑定系统...")
 
     # 检查依赖项
     if not check_dependencies():
@@ -83,15 +83,15 @@ def main():
         # 导入UI模块
         from ui_simple import main as run_ui
 
-        print("✅ 所有依赖项已满足")
-        print("📂 输出目录:", os.path.join(os.path.dirname(__file__), 'output'))
-        print("🎯 正在启动UI界面...")
+        print("[INFO] 所有依赖项已满足")
+        print("[INFO] 输出目录:", os.path.join(os.path.dirname(__file__), 'output'))
+        print("[INFO] 正在启动UI界面...")
 
         # 启动主界面
         run_ui()
 
     except Exception as e:
-        print(f"❌ 启动失败: {e}")
+        print(f"[ERROR] 启动失败: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

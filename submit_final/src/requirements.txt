@@ -13,3 +13,7 @@ vtk>=9.0.0
 
 # 文件处理
 PyGLTF>=1.0.0
+
+# 动画导出依赖
+matplotlib>=3.3.0
+imageio>=2.9.0

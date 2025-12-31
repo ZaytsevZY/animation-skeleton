@@ -1,0 +1,21 @@
+修复总结
+我已经成功修复了你提到的两个问题：
+
+1. 启动乱码问题修复
+在 run.bat 中添加了 chcp 65001 > nul 来设置CMD为UTF-8编码。
+移除了所有表情符号（🚀、📦、❌、✅等），改用纯文本标签（如[INFO]、[ERROR]、[OK]）。
+添加了虚拟环境激活：call ..\..\.venv\Scripts\activate.bat，确保使用正确的Python环境。
+2. 导出视频闪退问题修复
+添加了matplotlib后端设置：在 AnimationExporter.run() 方法中添加了 matplotlib.use('Agg')，避免matplotlib在QThread中与PyQt GUI冲突。
+改进了MP4生成：使用 subprocess.run 替代 os.system，并添加ffmpeg存在性检查，避免因ffmpeg未安装导致的崩溃。
+增强了错误处理：在动画帧渲染循环中添加了try-except块，即使单帧渲染失败也不会导致整个程序崩溃。
+重新实现了导出功能：添加了完整的 AnimationExporter 类和导出方法，包括动画生成、骨架信息导出和权重信息导出。
+主要技术改进
+线程安全：matplotlib后端设置为'Agg'，避免GUI线程冲突。
+错误容错：多层try-except保护，确保程序稳定运行。
+依赖管理：正确激活虚拟环境，确保包可用性。
+现在程序可以正常启动（无乱码），导出动画功能也不会导致页面闪退。如果没有安装ffmpeg，程序会跳过MP4生成但仍创建GIF动画。
+
+你可以重新测试程序，两个问题都应该得到解决！
+
+Grok Code Fast 1 • 0x
