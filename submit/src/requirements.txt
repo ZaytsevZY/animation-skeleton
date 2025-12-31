@@ -1,0 +1,15 @@
+# 骨架绑定系统依赖
+# 安装命令: pip install -r requirements.txt
+
+# 核心依赖
+numpy>=1.19.0
+PyQt5>=5.15.0
+pyvista>=0.40.0
+pyvistaqt>=0.9.0
+
+# 3D处理和可视化
+trimesh>=3.15.0
+vtk>=9.0.0
+
+# 文件处理
+PyGLTF>=1.0.0
